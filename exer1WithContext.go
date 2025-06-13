@@ -24,7 +24,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup) {
 
 func ping(ctx context.Context) {
 	select {
-	case <-ctx.Done():
+		case <-ctx.Done():
 			fmt.Println("ping cancelado")
 		case <-time.After(1 * time.Second):
 			fmt.Println("ping")
@@ -33,7 +33,7 @@ func ping(ctx context.Context) {
 
 func pong(ctx context.Context) {
 	select {
-	case <-ctx.Done():
+		case <-ctx.Done():
 			fmt.Println("ping cancelado")
 		case <-time.After(1 * time.Second):
 			fmt.Println("ping")
