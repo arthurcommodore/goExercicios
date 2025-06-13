@@ -1,111 +1,159 @@
+Exercícios de Concorrência em Go
 
 1. Goroutines básicas
 
 Ping-pong sem canais (warm-up)
-Implemente duas funções ping() e pong() que imprimem alternadamente “ping” e “pong” 10 vezes cada. Lance ambas como goroutines e garanta que a saída sempre comece com “ping” e termine depois do 10.º “pong”.
-Dica: time.Sleep uns milissegundos no começo da segunda goroutine para testar interleaving, mas use sync.WaitGroup para aguardar o término.
+Implemente duas funções ping() e pong() que imprimem alternadamente “ping” e “pong” 10 vezes cada.
+Lance ambas como goroutines e garanta que a saída sempre comece com “ping” e termine depois do 10.º “pong”.
+
+Dica: use time.Sleep uns milissegundos no começo da segunda goroutine para testar interleaving, mas use sync.WaitGroup para aguardar o término.
+
+---
 
 2. Channels unbuffered
 
 Cronômetro reverso
-Receba n via linha de comando e conte de n até 0, imprimindo um valor por segundo. Faça a lógica do relógio em uma goroutine separada que envie o valor atual por um channel sem buffer; a goroutine do main apenas recebe e imprime.
+Receba n via linha de comando e conte de n até 0, imprimindo um valor por segundo.
+
+- Faça a lógica do relógio em uma goroutine separada que envie o valor atual por um channel sem buffer.
+- A goroutine do main apenas recebe e imprime.
+
 Objetivo: sincronização 1-a-1 sem race conditions.
 
+---
 
 3. Channels buffered
 
 Pipeline de quadrados
 Crie três goroutines em linha:
 
-    Gerador envia 1 … 1000.
+- Gerador: envia números de 1 até 1000.
+- Elevador: lê, faz o quadrado (x*x) e repassa.
+- Somador: consome tudo e imprime a soma.
 
-    Elevador lê, faz x*x e repassa.
+Use channels com buffer de 50 entre cada estágio e feche-os corretamente. Compare o throughput com buffer 0.
 
-    Somador consome tudo e imprime a soma.
-    Use channels com buffer de 50 entre cada estágio e feche-os corretamente. Compare o throughput com buffer 0.
+---
 
 4. select e default
 
 Relógio (tic-tac) com cancelamento
-Imprima “tic” a cada 500 ms e “tac” a cada segundo. Ao apertar Enter, o programa deve parar limpo. Use duas goroutines geradoras e um canal de controle que você monitora com select (inclua um default para evitar dead-lock).
 
+- Imprima “tic” a cada 500 ms e “tac” a cada segundo.
+- Ao apertar Enter, o programa deve parar limpo.
+- Use duas goroutines geradoras e um canal de controle que você monitora com select (inclua um default para evitar dead-lock).
+
+---
 
 5. Communicating Sequential Processes (CSP)
 
 Produtor-consumidor com “back-pressure”
-Implemente 5 produtores que geram inteiros pseudo-aleatórios e 2 consumidores que só processam valores pares. O buffer deve ter espaço para 100 valores; se encher, produtores esperam. Quando um consumidor processar 10 000 valores, envie sinal para todos cancelarem. Meça quantos números cada produtor conseguiu gerar antes da parada.
 
+- Implemente 5 produtores que geram inteiros pseudo-aleatórios.
+- 2 consumidores que só processam valores pares.
+- O buffer deve ter espaço para 100 valores; se encher, produtores esperam.
+- Quando um consumidor processar 10.000 valores, envie sinal para todos cancelarem.
+- Meça quantos números cada produtor conseguiu gerar antes da parada.
+
+---
 
 6. Estrutura de dados: lista ligada concorrente
 
 LinkedList segura
-Modele uma lista simplesmente ligada de inteiros que suporta Insert, Delete, Find(min, max). Construa testes de concorrência nos quais 4 goroutines façam inserts, 2 façam deletes e 2 façam buscas em ranges sobre 1 000 000 operações. Use mutex ou channels; depois tente trocar o mecanismo e compare performance.
 
+Modele uma lista simplesmente ligada de inteiros que suporta:
+
+- Insert
+- Delete
+- Find (mínimo, máximo)
+
+Construa testes de concorrência com:
+
+- 4 goroutines fazendo inserts
+- 2 goroutines fazendo deletes
+- 2 goroutines fazendo buscas em ranges sobre 1.000.000 operações
+
+Use mutex ou channels; depois troque o mecanismo e compare performance.
+
+---
 
 7. Estrutura de dados: pool de conexões
 
 Pool reutilizável
-Simule um pool de até 5 “conexões” (strings). Implementar:
+
+Simule um pool de até 5 “conexões” (strings). Implemente:
 
 Get(ctx context.Context) (Conn, error)
 Put(Conn)
 
-Se não houver conexão disponível, Get deve bloquear até alguém devolver ou ctx ser cancelado. A função main cria 20 goroutines que pegam conexão, fazem trabalho de 100 ms e devolvem. Ao final, reporte quantas vezes cada conexão foi reutilizada.
+- Se não houver conexão disponível, Get deve bloquear até alguém devolver ou o contexto ser cancelado.
+- A função main cria 20 goroutines que pegam conexão, fazem trabalho de 100 ms e devolvem.
+- Ao final, reporte quantas vezes cada conexão foi reutilizada.
 
+---
 
 8. Busca de dados paralela
 
 Web-crawler de palavras-chave
-Dado um slice de URLs e uma palavra-alvo, faça downloads concorrentes (máximo 10 simultâneos, respeitando timeout de 5 s por request). Conte quantas vezes a palavra aparece em cada página e devolva um mapa [url]→count. Utilize sync.WaitGroup e um channel de jobs; cancele downloads remanescentes se o usuário apertar Ctrl-C (capturar sinal).
 
+- Dado um slice de URLs e uma palavra-alvo, faça downloads concorrentes (máximo 10 simultâneos, respeitando timeout de 5 s por request).
+- Conte quantas vezes a palavra aparece em cada página e devolva um mapa [url]→count.
+- Utilize sync.WaitGroup e um channel de jobs.
+- Cancele downloads remanescentes se o usuário apertar Ctrl-C (capturar sinal).
+
+---
 
 9. Índice invertido em memória
 
 Mini-search engine
-Carregue todos os .txt de um diretório. Construa um índice que associe cada termo à lista de arquivos onde ele aparece. Exponha um servidor HTTP simples com rota /search?q=foo+bar que devolve JSON com os arquivos que contêm todos os termos. Faça o parsing e a indexação em paralelo: cada arquivo é lido por uma goroutine que envia tokens para um estágio de merge seguro por mutex.
 
+- Carregue todos os arquivos .txt de um diretório.
+- Construa um índice que associe cada termo à lista de arquivos onde ele aparece.
+- Exponha um servidor HTTP simples com rota /search?q=foo+bar que devolve JSON com os arquivos que contêm todos os termos.
+- Faça o parsing e a indexação em paralelo: cada arquivo é lido por uma goroutine que envia tokens para um estágio de merge seguro por mutex.
+
+---
 
 10. Context avançado
 
 Timeout & retry de RPC
-Simule uma chamada RPC que falha 30 % das vezes. Escreva CallWithRetry(ctx, nRetries) que:
 
-    tenta;
+- Simule uma chamada RPC que falha 30% das vezes.
+- Escreva CallWithRetry(ctx, nRetries) que:
+    - tenta;
+    - se erro “transient”, duplica timeout usando context.WithTimeout;
+    - cancela corretamente o contexto anterior para evitar leaks.
+- Teste com 100 chamadas paralelas e meça latência média.
 
-    se erro “transient”, duplica timeout usando context.WithTimeout;
-
-    cancela corretamente o contexto anterior para evitar leaks.
-    Teste com 100 chamadas paralelas e meça latência média.
+---
 
 11. Worker pool cancelável
 
 Thumbnailer
-Receba pastas via CLI, busque recursivamente imagens, envie caminhos a um channel de jobs, processe com 4 workers que redimensionam as imagens. Use context.WithCancel para abortar tudo se qualquer worker encontrar erro grave (por exemplo, arquivo corrompido).
 
+- Receba pastas via CLI, busque recursivamente imagens, envie caminhos a um channel de jobs.
+- Processe com 4 workers que redimensionam as imagens.
+- Use context.WithCancel para abortar tudo se qualquer worker encontrar erro grave (ex: arquivo corrompido).
+
+---
 
 12. Projeto integrador
 
 Chat TCP multi-sala
-Especifique e implemente:
 
-    Servidor aceita múltiplas conexões.
+- Servidor aceita múltiplas conexões.
+- Cada sala é uma goroutine que possui seu próprio channel de broadcast.
+- Clientes podem /join room, /leave, /rooms, /quit.
+- Implementar “keep-alive”: se não receber ping do cliente em 30 s, desconecta.
+- Use context.WithCancel para que, ao fechar servidor, todas as salas fechem graceful.
 
-    Cada sala é um goroutine que possui seu próprio channel de broadcast.
+---
 
-    Clientes podem /join room, /leave, /rooms, /quit.
+Como tirar o máximo proveito
 
-    Implementar “keep-alive”: se não receber ping do cliente em 30 s, desconecta.
+- TDD sempre: crie pequenos testes e rode com go test -race.
+- Ferramentas: use go vet, golangci-lint, e o profiler (pprof) para detectar goroutines vazando.
+- Leitura paralela: “Concurrency in Go” (K. Karan) e a seção Effective Go sobre concorrência.
+- Compartilhe soluções: faça push no GitHub e peça code review.
 
-    Use context.WithCancel para que, ao fechar servidor, todas as salas fechem graceful.
-
-Como tirar o máximo
-
-    TDD sempre: crie pequenos testes e rode com go test -race.
-
-    Ferramentas: use go vet, golangci-lint, e o profiler (pprof) para ver goroutines vazando.
-
-    Leitura paralela: “Concurrency in Go” (K. Karan) e a Effective Go section sobre concurrency.
-
-    Compartilhe soluções: faça push no GitHub e peça code review.
-
-Se quiser gabaritos ou comentários-chave de implementação, é só pedir. Bons estudos!
+Se quiser gabaritos ou comentários-chave de implementação, é só pedir. Bons estudos! 🚀
