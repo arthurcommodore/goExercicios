@@ -1,0 +1,90 @@
+SISTEMA DE CAIXA - EXERCÍCIO DE STRUCTS EM GO
+
+Objetivo:
+---------
+Criar um sistema onde seja possível:
+1. Adicionar produtos ao carrinho
+2. Calcular o total da compra
+3. Mostrar um recibo
+4. (Opcional) Finalizar a compra, aplicar descontos, remover produtos etc.
+
+Structs sugeridas:
+------------------
+type Produto struct {
+    Nome       string
+    Preco      float64
+    Quantidade int
+}
+
+type Carrinho struct {
+    Itens []Produto
+}
+
+Funções que você deve implementar:
+----------------------------------
+- func AdicionarProduto(c *Carrinho, p Produto)
+  → Verifica se já existe e atualiza a quantidade, ou adiciona ao slice
+
+- func CalcularTotal(c Carrinho) float64
+  → Itera pelos itens do carrinho e calcula o total
+
+- func MostrarRecibo(c Carrinho)
+  → Mostra nome, qtd, preço unitário e subtotal por item
+
+Funções/bibliotecas que você pode usar:
+---------------------------------------
+- append()
+- fmt.Printf() ou fmt.Sprintf()
+- for range
+- if/else
+- sort.Slice()               (opcional, para ordenar)
+- strings.ToLower()          (opcional, para comparar nomes)
+- fmt.Scanln()               (opcional, entrada de dados)
+- bufio.NewScanner()         (opcional, leitura de terminal)
+- encoding/json              (opcional, persistência)
+
+Exemplo de função AdicionarProduto:
+-----------------------------------
+func AdicionarProduto(c *Carrinho, novo Produto) {
+    for i, item := range c.Itens {
+        if item.Nome == novo.Nome {
+            c.Itens[i].Quantidade += novo.Quantidade
+            return
+        }
+    }
+    c.Itens = append(c.Itens, novo)
+}
+
+Exemplo de função CalcularTotal:
+--------------------------------
+func CalcularTotal(c Carrinho) float64 {
+    var total float64
+    for _, item := range c.Itens {
+        total += item.Preco * float64(item.Quantidade)
+    }
+    return total
+}
+
+Exemplo de uso no main():
+-------------------------
+func main() {
+    carrinho := Carrinho{}
+
+    produto1 := Produto{"Arroz", 6.50, 2}
+    produto2 := Produto{"Leite", 4.00, 1}
+
+    AdicionarProduto(&carrinho, produto1)
+    AdicionarProduto(&carrinho, produto2)
+
+    MostrarRecibo(carrinho)
+}
+
+Dicas extras:
+-------------
+- Experimente remover produtos
+- Aplique desconto acima de certo valor
+- Mostre um menu interativo no terminal
+- Salve o recibo em um arquivo ou .json
+
+Bom estudo!
+🚀
