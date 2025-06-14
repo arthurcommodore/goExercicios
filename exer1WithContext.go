@@ -11,12 +11,6 @@ func worker(ctx context.Context, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	select {
-		case <-ctx.Done():
-			fmt.Println("Terminado o tempo")
-		default: 
-	}
-
 	ping(ctx)
 	pong(ctx)
 }
@@ -34,9 +28,9 @@ func ping(ctx context.Context) {
 func pong(ctx context.Context) {
 	select {
 		case <-ctx.Done():
-			fmt.Println("ping cancelado")
+			fmt.Println("pong cancelado")
 		case <-time.After(1 * time.Second):
-			fmt.Println("ping")
+			fmt.Println("pong")
 	}
 }
 
@@ -45,6 +39,11 @@ func main() {
 
 	ctx,cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+
+	go func() {
+		<-time.After(1 * time.Second)
+		cancel()
+	}()
 
 	for i := 1; i <= 10; i++ {
 		wg.Add(1)
